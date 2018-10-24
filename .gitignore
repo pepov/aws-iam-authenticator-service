@@ -1,0 +1,9 @@
+*.test
+*.prof
+
+/aws-iam-authenticator-service
+build/
+debug
+.vscode/
+.idea
+*.iml

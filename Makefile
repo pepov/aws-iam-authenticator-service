@@ -1,0 +1,65 @@
+BINARY=aias
+NAME=aws-iam-authenticator-service
+PROJECT=github.com/hortonworks/aws-iam-authenticator-service
+VERSION ?= $(shell git describe --tags --abbrev=0)-snapshot
+BUILD_TIME=$(shell date +%FT%T)
+GOFILES_NOVENDOR = $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./.git/*")
+LDFLAGS=-ldflags "-X ${PROJECT}/cloudbreak/common.Version=${VERSION} -X ${PROJECT}/cloudbreak/common.BuildTime=${BUILD_TIME}"
+
+deps: deps-errcheck
+
+deps-errcheck:
+	go get -u github.com/kisielk/errcheck
+
+formatcheck:
+	([ -z "$(shell gofmt -d $(GOFILES_NOVENDOR))" ]) || (echo "Source is unformatted"; exit 1)
+
+format:
+	@gofmt -w ${GOFILES_NOVENDOR}
+
+vet:
+	go vet -shadow ./...
+
+test:
+	go test -timeout 30s -race ./...
+
+errcheck:
+	errcheck -ignoretests -exclude errcheck_excludes.txt ./...
+
+coverage:
+	go test ${PROJECT}/cloudbreak -cover
+
+coverage-html:
+	go test ${PROJECT}/cloudbreak -coverprofile fmt
+	@go tool cover -html=fmt
+	@rm -f fmt
+
+build: errcheck formatcheck vet test build-darwin build-linux
+
+build-docker:
+	@#USER_NS='-u $(shell id -u $(whoami)):$(shell id -g $(whoami))'
+	docker run --rm ${USER_NS} -v "${PWD}":/go/src/${PROJECT} -w /go/src/${PROJECT} -e VERSION=${VERSION} golang:1.11 make deps-errcheck build
+
+build-darwin:
+	GOOS=darwin CGO_ENABLED=0 go build -a ${LDFLAGS} -o build/Darwin/${BINARY} main.go
+
+build-linux:
+	GOOS=linux CGO_ENABLED=0 go build -a ${LDFLAGS} -o build/Linux/${BINARY} main.go
+
+release-docker:
+	@USER_NS='-u $(shell id -u $(whoami)):$(shell id -g $(whoami))'
+	docker run --rm ${USER_NS} -v "${PWD}":/go/src/${PROJECT} -w /go/src/${PROJECT} -e VERSION=${VERSION} -e GITHUB_ACCESS_TOKEN=${GITHUB_TOKEN} golang:1.11 bash -c "make deps && make release"
+
+release: build
+	rm -rf release
+	mkdir release
+	git tag v${VERSION}
+	git push https://${GITHUB_ACCESS_TOKEN}@${PROJECT}.git v${VERSION}
+	tar -zcvf release/cb-cli_${VERSION}_Darwin_x86_64.tgz -C build/Darwin "${BINARY}"
+	tar -zcvf release/cb-cli_${VERSION}_Linux_x86_64.tgz -C build/Linux "${BINARY}"
+
+docker-build-minikube:
+	docker build -t ${NAME}:local .
+
+helm-install-minikube: docker-build-minikube
+	helm upgrade --install ${NAME} helm/${NAME} -f helm/config-minikube.yml --namespace ${NAME} --timeout 60; \

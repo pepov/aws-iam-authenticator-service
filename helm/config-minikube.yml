@@ -1,0 +1,6 @@
+image:
+  tag: local
+  pullPolicy: Never
+
+service:
+  type: LoadBalancer
