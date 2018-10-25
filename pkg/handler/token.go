@@ -34,29 +34,26 @@ func Token(w http.ResponseWriter, r *http.Request) {
 	configContent := aws.GenerateConfig(awsAccessKeyID, awsSecretAccessKey)
 	dir, configFile, err := util.CreateTemporaryFile(clusterName, configContent)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Failed to create config file: %s", err.Error())
-		writeError(w, http.StatusUnauthorized, errorMsg)
+		writeError(w, http.StatusUnauthorized, fmt.Sprintf("Failed to create config file: %s", err.Error()))
 		return
 	}
 	defer os.RemoveAll(dir)
 	log.Debugf("Requesting token for: %s", clusterName)
 	token, err := aws.GetEKSToken(clusterName, configFile)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Failed to get token: %s", err.Error())
-		writeError(w, http.StatusUnauthorized, errorMsg)
+		writeError(w, http.StatusUnauthorized, fmt.Sprintf("Failed to get token: %s", err.Error()))
 		return
 	}
 	if token == nil {
 		w.WriteHeader(http.StatusNoContent)
-	} else {
-		response, err := json.Marshal(token)
-		if err != nil {
-			errorMsg := fmt.Sprintf("Failed to marshall token: %s", err.Error())
-			writeError(w, http.StatusUnauthorized, errorMsg)
-			return
-		}
-		fmt.Fprint(w, string(response))
+		return
 	}
+	response, err := json.Marshal(token)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, fmt.Sprintf("Failed to marshall token: %s", err.Error()))
+		return
+	}
+	fmt.Fprint(w, string(response))
 }
 
 func writeError(w http.ResponseWriter, statusCode int, statusReason string) {

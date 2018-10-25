@@ -5,12 +5,13 @@ VERSION ?=$(shell git describe --tags --abbrev=0)-snapshot
 BUILD_TIME=$(shell date +%FT%T)
 GOFILES_NOVENDOR = $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./.git/*")
 DEBUG ?=false
-LDFLAGS=-ldflags "-X ${PROJECT}/main.Version=${VERSION} -X ${PROJECT}/main.BuildTime=${BUILD_TIME} -X ${PROJECT}/main.Debug=${DEBUG}"
+PORT ?= 8080
+LDFLAGS=-ldflags "-X ${PROJECT}/config.Version=${VERSION} -X ${PROJECT}/config.BuildTime=${BUILD_TIME} -X ${PROJECT}/config.Debug=${DEBUG} -X ${PROJECT}/config.Port=${PORT}"
 
 deps: deps-errcheck
 
 deps-errcheck:
-	go get -u github.com/kisielk/errcheck
+	GO111MODULE=off go get -u github.com/kisielk/errcheck
 
 formatcheck:
 	([ -z "$(shell gofmt -d $(GOFILES_NOVENDOR))" ]) || (echo "Source is unformatted"; exit 1)
@@ -25,7 +26,7 @@ test:
 	go test -timeout 30s -race ./...
 
 errcheck:
-	errcheck -ignoretests -exclude errcheck_excludes.txt ./...
+	${GOPATH}/bin/errcheck -ignoretests -exclude errcheck_excludes.txt ./...
 
 coverage:
 	go test ${PROJECT}/cloudbreak -cover

@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"os"
-	"sync"
 	"syscall"
 
 	"bou.ke/monkey"
@@ -22,51 +21,36 @@ func init() {
 
 // GetEKSToken retrieves EKS token
 func GetEKSToken(clusterName, configFile string) (*kube.TokenResponse, error) {
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	tokenChan := make(chan string)
-	errChan := make(chan error)
+	var responseToken string
+	var responseError error
 
-	go threadLocal.SetValues(gls.Values{awsSharedCredentialsFileEnv: configFile}, func() {
-		defer wg.Done()
-
+	threadLocal.SetValues(gls.Values{awsSharedCredentialsFileEnv: configFile}, func() {
 		log.Debugf("Constructing new generator for: %s", clusterName)
 		generator, err := heptio.NewGenerator()
 		if err != nil {
-			errChan <- fmt.Errorf("Error during generator initialization: %v", err)
+			responseError = fmt.Errorf("Error during generator initialization: %v", err)
 			return
 		}
 		log.Debugf("Retrieving token for: %s", clusterName)
 		token, err := generator.Get(clusterName)
 		if err != nil {
-			errChan <- fmt.Errorf("Error during token request: %v", err)
+			responseError = fmt.Errorf("Error during token request: %v", err)
 			return
 		}
 		log.Debugf("Token is retrieved for: %s", clusterName)
-		tokenChan <- token
+		responseToken = token
 	})
 
-	go func() {
-		log.Debugf("Waiting for WaitGroup on: %s", clusterName)
-		wg.Wait()
-		log.Debugf("WaitGroup is done for: %s", clusterName)
-		close(tokenChan)
-		close(errChan)
-	}()
-
-	log.Debugf("Waiting for token for: %s", clusterName)
-	select {
-	case token, _ := <-tokenChan:
-		return &kube.TokenResponse{
-			APIVersion: "client.authentication.k8s.io/v1alpha1",
-			Kind:       "ExecCredential",
-			Status: kube.TokenStatus{
-				Token: token,
-			},
-		}, nil
-	case err, _ := <-errChan:
-		return nil, err
+	if responseError != nil {
+		return nil, responseError
 	}
+	return &kube.TokenResponse{
+		APIVersion: "client.authentication.k8s.io/v1alpha1",
+		Kind:       "ExecCredential",
+		Status: kube.TokenStatus{
+			Token: responseToken,
+		},
+	}, nil
 }
 
 func getEnv(key string) string {
