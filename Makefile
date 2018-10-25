@@ -1,10 +1,11 @@
 BINARY=aias
 NAME=aws-iam-authenticator-service
 PROJECT=github.com/hortonworks/aws-iam-authenticator-service
-VERSION ?= $(shell git describe --tags --abbrev=0)-snapshot
+VERSION ?=$(shell git describe --tags --abbrev=0)-snapshot
 BUILD_TIME=$(shell date +%FT%T)
 GOFILES_NOVENDOR = $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./.git/*")
-LDFLAGS=-ldflags "-X ${PROJECT}/cloudbreak/common.Version=${VERSION} -X ${PROJECT}/cloudbreak/common.BuildTime=${BUILD_TIME}"
+DEBUG ?=false
+LDFLAGS=-ldflags "-X ${PROJECT}/main.Version=${VERSION} -X ${PROJECT}/main.BuildTime=${BUILD_TIME} -X ${PROJECT}/main.Debug=${DEBUG}"
 
 deps: deps-errcheck
 

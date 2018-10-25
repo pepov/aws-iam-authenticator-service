@@ -1,3 +1,5 @@
+# bou.ke/monkey v1.0.1
+bou.ke/monkey
 # github.com/aws/aws-sdk-go v1.15.62
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/credentials/stscreds
@@ -35,11 +37,15 @@ github.com/gogo/protobuf/sortkeys
 github.com/golang/glog
 # github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf
 github.com/google/gofuzz
+# github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1
+github.com/gopherjs/gopherjs/js
 # github.com/heptio/authenticator v0.3.0
 github.com/heptio/authenticator/pkg/token
 github.com/heptio/authenticator/pkg/arn
 # github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8
 github.com/jmespath/go-jmespath
+# github.com/jtolds/gls v4.2.1+incompatible
+github.com/jtolds/gls
 # github.com/konsorten/go-windows-terminal-sequences v0.0.0-20180402223658-b729f2633dfe
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/sirupsen/logrus v1.1.1
