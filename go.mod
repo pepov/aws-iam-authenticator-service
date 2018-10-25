@@ -1,4 +1,4 @@
-module github.com/hortonworks/aws-iam-authenticator-service
+module github.com/mhmxs/aws-iam-authenticator-service
 
 require (
 	bou.ke/monkey v1.0.1

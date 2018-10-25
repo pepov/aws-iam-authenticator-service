@@ -6,19 +6,19 @@ version: 2
 #       - restore_cache:
 #           key: gopkg-v1-{{ .Branch }}-{{ checksum "go.sum" }}
 #           paths:
-#             - /go/src/github.com/hortonworks/aws-iam-authenticator-service/vendor
+#             - /go/src/github.com/mhmxs/aws-iam-authenticator-service/vendor
 #   cache_save:
 #     steps:
 #       - save_cache:
 #           key: gopkg-v1-{{ .Branch }}-{{ checksum "go.sum" }}
 #           paths:
-#             - /go/src/github.com/hortonworks/aws-iam-authenticator-service/vendor
+#             - /go/src/github.com/mhmxs/aws-iam-authenticator-service/vendor
 
 jobs:
   build:
     docker:
       - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/hortonworks/aws-iam-authenticator-service
+    working_directory: /go/src/github.com/mhmxs/aws-iam-authenticator-service
     steps:
       - checkout
       # - cache_restore
