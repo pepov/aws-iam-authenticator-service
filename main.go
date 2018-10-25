@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 
-	heptio "github.com/kubernetes-sigs/aws-iam-authenticator"
+	heptio "github.com/heptio/authenticator/pkg/token"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,14 +29,17 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
+const awsCredentialsDirBase = "./management-State"
+const awsCredentialsDirectory = awsCredentialsDirBase + "/aws"
+const awsCredentialsPath = awsCredentialsDirectory + "/credentials"
+const awsSharedCredentialsFile = "AWS_SHARED_CREDENTIALS_FILE"
+
 func getEKSToken(clusterName, awsAccessKeyID, awsSecretAccessKey string) (string, error) {
 	generator, err := heptio.NewGenerator()
 	if err != nil {
 		return "", fmt.Errorf("error creating generator: %v", err)
 	}
 
-	defer awsCredentialsLocker.Unlock()
-	awsCredentialsLocker.Lock()
 	os.Setenv(awsSharedCredentialsFile, awsCredentialsPath)
 
 	defer func() {
@@ -55,7 +57,7 @@ func getEKSToken(clusterName, awsAccessKeyID, awsSecretAccessKey string) (string
 		`[default]
 aws_access_key_id=%v
 aws_secret_access_key=%v`,
-		awsAccessKeyId,
+		awsAccessKeyID,
 		awsSecretAccessKey)), 0644)
 	if err != nil {
 		return "", fmt.Errorf("error writing credentials file: %v", err)
