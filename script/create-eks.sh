@@ -2,12 +2,13 @@
 
 : ${YQ_VER:="2.1.1"}
 : ${EKSCTL_VER:="0.1.6"}
+: ${AWS_ATH_VER:="0.3.0"}
 : ${REGION:=us-west-2}
 : ${TOKEN_SERVICE:="http://localhost:8080"}
 : ${INSTALL_LOCATION:=$PWD/bin}
 
 if [[ " $@ " = *" -h "* ]]; then
-    echo aws.sh creates an EKS cluster with a long live cluster-admin user authenticated with certification
+    echo create-eks.sh creates an EKS cluster with a long live cluster-admin user authenticated with certification
     echo Common Options:
     echo -y auto confirm operations
     exit 0
@@ -29,11 +30,6 @@ if [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
     read -s -t 30 AWS_SECRET_ACCESS_KEY
     echo
     export AWS_SECRET_ACCESS_KEY
-fi
-
-if ! which python > /dev/null; then
-    echo "Please install python first."
-    exit 128
 fi
 
 if [[ " $@ " = *" -y "* ]]; then
@@ -58,18 +54,6 @@ is_linux() {
 
 mkdir -p $INSTALL_LOCATION || :
 
-if ! which pip > /dev/null; then
-    ask "Installing pip"
-    curl -sL https://bootstrap.pypa.io/get-pip.py | python
-fi
-
-USER_BASE=$(python -m site --user-base)
-
-if ! [[ -f $USER_BASE/bin/aws ]]; then
-    ask "Installing awscli"
-    pip install --user awscli
-fi
-
 if ! [[ -f $INSTALL_LOCATION/yq ]]; then
     curl -sL https://github.com/mikefarah/yq/releases/download/${YQ_VER}/yq_${OS}_amd64 -o $INSTALL_LOCATION/yq
     chmod +x $INSTALL_LOCATION/yq
@@ -77,6 +61,11 @@ fi
 
 if ! [[ -f $INSTALL_LOCATION/eksctl ]]; then
     curl -sL https://github.com/weaveworks/eksctl/releases/download/${EKSCTL_VER}/eksctl_$(uname -s)_amd64.tar.gz | tar xz -C $INSTALL_LOCATION
+fi
+
+if ! [[ -f $INSTALL_LOCATION/heptio-authenticator-aws ]]; then
+    curl -sL https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v${AWS_ATH_VER}/heptio-authenticator-aws_${AWS_ATH_VER}_${OS}_amd64 -o $INSTALL_LOCATION/heptio-authenticator-aws
+    chmod +x $INSTALL_LOCATION/heptio-authenticator-aws
 fi
 
 export PATH=$INSTALL_LOCATION:$USER_BASE/bin:$PATH

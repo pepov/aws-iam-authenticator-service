@@ -61,7 +61,10 @@ release: build
 	tar -zcvf release/cb-cli_${VERSION}_Linux_x86_64.tgz -C build/Linux "${BINARY}"
 
 docker-build-minikube:
-	docker build -t ${NAME}:local .
+	source (minikube docker-env)
+	env | grep DOCKER
+
+	# docker build -t ${NAME}:local .
 
 helm-install-minikube: docker-build-minikube
 	helm upgrade --install ${NAME} helm/${NAME} -f helm/config-minikube.yml --namespace ${NAME} --timeout 60; \

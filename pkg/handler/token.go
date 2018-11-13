@@ -13,7 +13,6 @@ import (
 
 // Token converts input parameters to an EKS token
 func Token(w http.ResponseWriter, r *http.Request) {
-	var err error
 	query := r.URL.Query()
 	clusterName := query.Get("clusterName")
 	if len(clusterName) == 0 {
@@ -32,12 +31,16 @@ func Token(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Debugf("Generating config file for: %s", clusterName)
 	configContent := aws.GenerateConfig(awsAccessKeyID, awsSecretAccessKey)
+	var err error
 	dir, configFile, err := util.CreateTemporaryFile(clusterName, configContent)
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, fmt.Sprintf("Failed to create config file: %s", err.Error()))
 		return
 	}
-	defer os.RemoveAll(dir)
+	defer func() {
+		err = os.RemoveAll(dir)
+		log.Error(err.Error())
+	}()
 	log.Debugf("Requesting token for: %s", clusterName)
 	token, err := aws.GetEKSToken(clusterName, configFile)
 	if err != nil {
@@ -53,7 +56,10 @@ func Token(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnauthorized, fmt.Sprintf("Failed to marshall token: %s", err.Error()))
 		return
 	}
-	fmt.Fprint(w, string(response))
+	_, err = fmt.Fprint(w, string(response))
+	if err != nil {
+		log.Error(err.Error())
+	}
 }
 
 func writeError(w http.ResponseWriter, statusCode int, statusReason string) {

@@ -16,6 +16,9 @@ const (
 func init() {
 	for _, k := range []string{awsAccessKeyIDEnv, awsSecretAccessKeyEnv, awsProfileEnv, awsSharedCredentialsFileEnv} {
 		log.Debugf("Unset env variable: %s", k)
-		os.Unsetenv(k)
+		err := os.Unsetenv(k)
+		if err != nil {
+			panic("Unable to unset variable: " + k)
+		}
 	}
 }

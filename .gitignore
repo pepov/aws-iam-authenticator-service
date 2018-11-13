@@ -3,6 +3,8 @@
 
 /aws-iam-authenticator-service
 build/
+script/bin
+script/config
 debug
 .vscode/
 .idea
