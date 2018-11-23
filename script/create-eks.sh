@@ -1,11 +1,13 @@
 #!/bin/bash -e
 
 : ${YQ_VER:="2.1.1"}
-: ${EKSCTL_VER:="0.1.6"}
+: ${EKSCTL_VER:="0.1.11"}
 : ${AWS_ATH_VER:="0.3.0"}
 : ${REGION:=us-west-2}
 : ${TOKEN_SERVICE:="http://localhost:8080"}
 : ${INSTALL_LOCATION:=$PWD/bin}
+: ${SUBNET_IDS:=}
+: ${EKSCTL_OPTIONS:=}
 
 if [[ " $@ " = *" -h "* ]]; then
     echo create-eks.sh creates an EKS cluster with a long live cluster-admin user authenticated with certification
@@ -55,15 +57,18 @@ is_linux() {
 mkdir -p $INSTALL_LOCATION || :
 
 if ! [[ -f $INSTALL_LOCATION/yq ]]; then
+    echo "Downloading yq"
     curl -sL https://github.com/mikefarah/yq/releases/download/${YQ_VER}/yq_${OS}_amd64 -o $INSTALL_LOCATION/yq
     chmod +x $INSTALL_LOCATION/yq
 fi
 
 if ! [[ -f $INSTALL_LOCATION/eksctl ]]; then
+    echo "Downloading eksctl"
     curl -sL https://github.com/weaveworks/eksctl/releases/download/${EKSCTL_VER}/eksctl_$(uname -s)_amd64.tar.gz | tar xz -C $INSTALL_LOCATION
 fi
 
 if ! [[ -f $INSTALL_LOCATION/heptio-authenticator-aws ]]; then
+    echo "Downloading AWS IAM authenticator"
     curl -sL https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v${AWS_ATH_VER}/heptio-authenticator-aws_${AWS_ATH_VER}_${OS}_amd64 -o $INSTALL_LOCATION/heptio-authenticator-aws
     chmod +x $INSTALL_LOCATION/heptio-authenticator-aws
 fi
@@ -73,10 +78,27 @@ export PATH=$INSTALL_LOCATION:$USER_BASE/bin:$PATH
 KUBE_CONFIG_ORIGINAL=config/$CLUSTER_NAME/kube-config-original.yaml
 KUBE_CONFIG=config/$CLUSTER_NAME/kube-config.yaml
 
+echo "Check if cluster already exists"
 if ! eksctl get cluster --name ${CLUSTER_NAME} >> /dev/null; then
-    ask "Creating EKS cluster"
+    ask "Cluster does not exist, do you want to create it?"
     mkdir -p $PWD/config/$CLUSTER_NAME || :
-    eksctl create cluster --kubeconfig=${KUBE_CONFIG_ORIGINAL} --name ${CLUSTER_NAME} --region ${REGION} --ssh-access
+
+    if [[ -z "$SUBNET_IDS" ]]; then
+        echo -n "Specify at least 2 subnet ids separated by comma or press enter to create new: "
+        read -t 60 SUBNET_IDS
+    fi
+    if [[ -n "$SUBNET_IDS" ]]; then
+        EKSCTL_OPTIONS+="--vpc-public-subnets=${SUBNET_IDS}"
+
+        if [[ -z "$REGION" ]]; then
+            echo -n "Please specify the region: "
+            read -t 60 REGION
+        fi
+    fi
+
+    set -x
+    eksctl create cluster --kubeconfig=${KUBE_CONFIG_ORIGINAL} --name ${CLUSTER_NAME} --region ${REGION} --ssh-access $EKSCTL_OPTIONS
+    set +x
 fi
 
 cp -f ${KUBE_CONFIG_ORIGINAL} ${KUBE_CONFIG}
