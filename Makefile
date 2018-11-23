@@ -36,7 +36,7 @@ coverage-html:
 	@go tool cover -html=fmt
 	@rm -f fmt
 
-build: errcheck formatcheck vet test build-darwin build-linux
+build: formatcheck vet test build-darwin build-linux
 
 build-docker:
 	@#USER_NS='-u $(shell id -u $(whoami)):$(shell id -g $(whoami))'
