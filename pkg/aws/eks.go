@@ -7,8 +7,8 @@ import (
 
 	"bou.ke/monkey"
 	heptio "github.com/heptio/authenticator/pkg/token"
+	"github.com/hortonworks/aws-iam-authenticator-service/pkg/kube"
 	"github.com/jtolds/gls"
-	"github.com/mhmxs/aws-iam-authenticator-service/pkg/kube"
 	log "github.com/sirupsen/logrus"
 )
 

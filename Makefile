@@ -1,6 +1,6 @@
 BINARY=aias
 NAME=aws-iam-authenticator-service
-PROJECT=github.com/mhmxs/aws-iam-authenticator-service
+PROJECT=github.com/hortonworks/aws-iam-authenticator-service
 VERSION ?=$(shell git describe --tags --abbrev=0)-snapshot
 BUILD_TIME=$(shell date +%FT%T)
 GOFILES_NOVENDOR = $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./.git/*")

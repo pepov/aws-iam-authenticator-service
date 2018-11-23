@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/mhmxs/aws-iam-authenticator-service/pkg/aws"
-	"github.com/mhmxs/aws-iam-authenticator-service/pkg/util"
+	"github.com/hortonworks/aws-iam-authenticator-service/pkg/aws"
+	"github.com/hortonworks/aws-iam-authenticator-service/pkg/util"
 	log "github.com/sirupsen/logrus"
 )
 

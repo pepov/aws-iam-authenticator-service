@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/mhmxs/aws-iam-authenticator-service/config"
-	"github.com/mhmxs/aws-iam-authenticator-service/pkg/handler"
+	"github.com/hortonworks/aws-iam-authenticator-service/config"
+	"github.com/hortonworks/aws-iam-authenticator-service/pkg/handler"
 	log "github.com/sirupsen/logrus"
 )
 
