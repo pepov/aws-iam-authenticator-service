@@ -39,7 +39,9 @@ func Token(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() {
 		err = os.RemoveAll(dir)
-		log.Error(err.Error())
+		if err != nil {
+			log.Error(err.Error())
+		}
 	}()
 	log.Debugf("Requesting token for: %s", clusterName)
 	token, err := aws.GetEKSToken(clusterName, configFile)
