@@ -70,19 +70,21 @@ fi
 
 export PATH=$INSTALL_LOCATION:$USER_BASE/bin:$PATH
 
-KUBE_CONFIG_HEPTIO=config/$CLUSTER_NAME/.kube-config-heptio.yaml
+KUBE_CONFIG_ORIGINAL=config/$CLUSTER_NAME/kube-config-original.yaml
 KUBE_CONFIG=config/$CLUSTER_NAME/kube-config.yaml
 
 if ! eksctl get cluster --name ${CLUSTER_NAME} >> /dev/null; then
     ask "Creating EKS cluster"
     mkdir -p $PWD/config/$CLUSTER_NAME || :
-    eksctl create cluster --kubeconfig=${KUBE_CONFIG_HEPTIO} --name ${CLUSTER_NAME} --region ${REGION} --ssh-access
+    eksctl create cluster --kubeconfig=${KUBE_CONFIG_ORIGINAL} --name ${CLUSTER_NAME} --region ${REGION} --ssh-access
 fi
 
-cp -f ${KUBE_CONFIG_HEPTIO} ${KUBE_CONFIG}
+cp -f ${KUBE_CONFIG_ORIGINAL} ${KUBE_CONFIG}
 yq w -i ${KUBE_CONFIG} users\[0\].user.exec.command curl
 yq d -i ${KUBE_CONFIG} users\[0\].user.exec.args
 yq w -i ${KUBE_CONFIG} users\[0\].user.exec.args\[+\] '"-s"'
-yq w -i ${KUBE_CONFIG} users\[0\].user.exec.args\[+\] "${TOKEN_SERVICE}?clusterName=${CLUSTER_NAME}&awsAccessKeyID=${AWS_ACCESS_KEY_ID}&awsSecretAccessKey=${AWS_SECRET_ACCESS_KEY}"
+yq w -i ${KUBE_CONFIG} users\[0\].user.exec.args\[+\] '"-d"'
+yq w -i ${KUBE_CONFIG} users\[0\].user.exec.args\[+\] "{\"clusterName\":\"${CLUSTER_NAME}\",\"awsAccessKeyId\":\"${AWS_ACCESS_KEY_ID}\",\"awsSecretAccessKey\":\"${AWS_SECRET_ACCESS_KEY}\"}"
+yq w -i ${KUBE_CONFIG} users\[0\].user.exec.args\[+\] "${TOKEN_SERVICE}"
 
 echo Kubernetes config file is generated: ${PWD}/${KUBE_CONFIG}

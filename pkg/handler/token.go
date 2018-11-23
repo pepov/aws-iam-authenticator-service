@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hortonworks/aws-iam-authenticator-service/pkg/kube"
 	"net/http"
 	"os"
 
@@ -13,18 +14,24 @@ import (
 
 // Token converts input parameters to an EKS token
 func Token(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query()
-	clusterName := query.Get("clusterName")
+	decoder := json.NewDecoder(r.Body)
+	var tokenRequest kube.TokenRequest
+	if err := decoder.Decode(&tokenRequest); err != nil {
+		log.Errorf("Invalid request, err: %s", err.Error())
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("Invalid token request: %s", err.Error()))
+		return
+	}
+	clusterName := tokenRequest.ClusterName
 	if len(clusterName) == 0 {
 		writeError(w, http.StatusBadRequest, "missing clusterName")
 		return
 	}
-	awsAccessKeyID := query.Get("awsAccessKeyID")
+	awsAccessKeyID := tokenRequest.AwsAccessKeyId
 	if len(awsAccessKeyID) == 0 {
 		writeError(w, http.StatusBadRequest, "missing awsAccessKeyID")
 		return
 	}
-	awsSecretAccessKey := query.Get("awsSecretAccessKey")
+	awsSecretAccessKey := tokenRequest.AwsSecretAccessKey
 	if len(awsSecretAccessKey) == 0 {
 		writeError(w, http.StatusBadRequest, "missing awsSecretAccessKey")
 		return
