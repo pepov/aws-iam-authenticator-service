@@ -40,7 +40,7 @@ build: formatcheck vet test build-darwin build-linux
 
 build-docker:
 	@#USER_NS='-u $(shell id -u $(whoami)):$(shell id -g $(whoami))'
-	docker run --rm ${USER_NS} -v "${PWD}":/go/src/${PROJECT} -w /go/src/${PROJECT} -e VERSION=${VERSION} golang:1.11 make deps-errcheck build
+	docker run --rm ${USER_NS} -v "${PWD}":/go/src/${PROJECT} -w /go/src/${PROJECT} -e VERSION=${VERSION} -e GO111MODULE=on golang:1.11 make build
 
 build-darwin:
 	GOOS=darwin CGO_ENABLED=0 go build -a ${LDFLAGS} -o build/Darwin/${BINARY} main.go
