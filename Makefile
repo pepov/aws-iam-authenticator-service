@@ -1,5 +1,6 @@
 BINARY=aias
 NAME=aws-iam-authenticator-service
+DOCKER_IMAGE_NAME ?= hortonworks/aws-iam-authenticator-service
 PROJECT=github.com/hortonworks/aws-iam-authenticator-service
 VERSION ?=$(shell git describe --tags --abbrev=0)-snapshot
 BUILD_TIME=$(shell date +%FT%T)
@@ -59,6 +60,9 @@ release: build
 	git push https://${GITHUB_ACCESS_TOKEN}@${PROJECT}.git v${VERSION}
 	tar -zcvf release/cb-cli_${VERSION}_Darwin_x86_64.tgz -C build/Darwin "${BINARY}"
 	tar -zcvf release/cb-cli_${VERSION}_Linux_x86_64.tgz -C build/Linux "${BINARY}"
+
+docker-image-build:
+	docker build -t ${DOCKER_IMAGE_NAME}:${VERSION} .
 
 docker-build-minikube:
 	docker build -t ${NAME}:local .
